@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  INFLOW
+  OUTFLOW
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  email          String        @unique
+  passwordHash   String
+  createdAt      DateTime      @default(now())
+  transactions   Transaction[]
+  bills          Bill[]
+  insights       Insight[]
+}
+
+model Transaction {
+  id            Int              @id @default(autoincrement())
+  user          User             @relation(fields: [userId], references: [id])
+  userId        Int
+  date          DateTime
+  description   String
+  merchant      String?
+  amountPaise   Int              // store amounts in paise to avoid float issues (₹1 = 100 paise)
+  type          TransactionType
+  category      String?
+  createdAt     DateTime         @default(now())
+}
+
+model Bill {
+  id               Int       @id @default(autoincrement())
+  user             User      @relation(fields: [userId], references: [id])
+  userId           Int
+  originalFilename String
+  storedPath       String
+  uploadedAt       DateTime  @default(now())
+  status           String?
+  extractedJson    Json?
+}
+
+model Insight {
+  id            Int      @id @default(autoincrement())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        Int
+  periodStart   DateTime
+  periodEnd     DateTime
+  summary       String
+  recommendation String
+  createdAt     DateTime @default(now())
+}
+
